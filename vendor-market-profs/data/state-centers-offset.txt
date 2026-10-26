@@ -1,0 +1,10 @@
+"state","latitude","longitude"
+"District Of Columbia",38.8964,-77.0262
+"Delaware",39.3498,-75.5148
+"New Jersey",40.3140,-74.5089
+"Connecticut",41.5834,-72.7622
+"Rhode Island",41.6772,-71.5101
+"Massachusetts",42.2373,-71.5314
+"Vermont",44.0407,-72.7093
+"New Hampshire",43.4108,-71.5653
+"Maryland",38.3914,-75.0697
