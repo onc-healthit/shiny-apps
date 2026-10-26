@@ -1,0 +1,7 @@
+#library(maptools)
+library(sf)
+library(sp)
+#ak<-readShapePoly("data/akStpoly")
+#hi<-readShapePoly("data/hiStpoly")
+ak<-st_read("data/akStpoly.shp")
+hi<-st_read("data/hiStpoly.shp")
