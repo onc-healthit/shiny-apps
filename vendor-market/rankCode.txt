@@ -1,0 +1,73 @@
+file:
+by state
+all vendors with at least one customer
+order greatest to least
+
+require(RDSTK)
+require(RJSONIO)
+require(rjson)
+
+venProp<-function(data,year,vendor){
+data<-data[data[,2]==year,]
+  idTots<-data.frame(table(data[,1]))
+  idTots<-data.frame(idTots[,1],data$state[match(idTots[,1],data[,1])])
+  stTots<-data.frame(table(idTots[,2]))
+df<-data.frame(data,venY=grepl(vendor,data$ven,fixed=TRUE))
+venTots<-data.frame(table(df[df$venY==TRUE,]$state))
+yrTots<-data.frame(stTots,rep(vendor,nrow(stTots)),(venTots[,2][match(stTots[,1],venTots[,1])]),round((100*(venTots[,2][match(stTots[,1],venTots[,1])]*(1/stTots[,2]))),1))
+colnames(yrTots)<-c("state","yrTot","ven","venTot","prop")
+    yrTots[,2]<-as.numeric(yrTots[,2])
+    yrTots[,4]<-as.numeric(yrTots[,4])
+yrTots<-data.frame(
+      rbind(
+        yrTots,data.frame(state="National",yrTot=sum(yrTots[,2],na.rm=T),ven=vendor,venTot=sum(yrTots[,4],na.rm=T),prop=(round((100*(sum(yrTots[,4],na.rm=T)*(1/sum(yrTots[,2],na.rm=T)))),1)))))
+return(yrTots)
+}
+
+####
+venRank<-function(st,size){
+x<-data.frame(table(st[[size]][,4]))
+x[,1]<-as.character(x[,1])
+x[,1]<-as.numeric(x[,1])
+x<-x[order(-x[,1]),]
+x1<-data.frame(prop=x[,1],order=c(1:nrow(x)))
+if(nrow(x1[x1[,1]==0,]) !=0){
+x1[x1[,1]==0,][,2]<-0
+df<-data.frame(state=st[[size]]$state,ven=st[[size]]$ven,prop=st[[size]]$prop,rank=x1[,2][match(st[[size]][,4],x1[,1])])
+}
+else{
+df<-data.frame(state=st[[size]]$state,ven=st[[size]]$ven,prop=st[[size]]$prop,rank=x1[,2][match(st[[size]][,4],x1[,1])])
+}
+return(df)
+}
+  func<-function(data,year,vendor,standalone,combo){
+    out<-tryCatch(
+  venMkt(data=data,year=year,vendor=vendor,standalone=standalone,combo=combo),
+  error = function(e){
+    data.frame(state="",yrTot="",venTot="",prop="",ven="")
+  }
+    )
+  return(out)
+  }
+rankData<-function(file,data,year,standalone,combo){
+venCt<-data.frame(table(file[file$prgm_yr==year,]$vendor))
+venCt[,1]<-as.character(venCt[,1])
+venDF<-ldply(lapply(venCt[,1], function(x) func(data,year,x,standalone,combo)),data.frame)
+venDF<-venDF[venDF[,1] !="",]
+venDF$prop<-as.numeric(venDF$prop)
+venDF<-venDF[order(venDF$state,-venDF$prop),]
+st<-split(venDF,venDF$state)
+size<-c(1:length(st))
+rank<-ldply(lapply(size,function(x) venRank(st,x)),data.frame)
+if(standalone==TRUE){
+rank<-data.frame(rank,type=rep("standalone",nrow(rank)))
+}
+else if (combo==TRUE){
+rank<-data.frame(rank,type=rep("combo",nrow(rank)))
+}
+else{
+rank<-data.frame(rank,type=rep("any",nrow(rank)))
+}
+rank<-data.frame(rank,year=rep(year,nrow(rank)))
+return(rank)
+}
